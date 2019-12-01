@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     if (str_createSystem(STORAGE_FILEPATH) != 0) {
         printf("failed to open storage config file! (%s)\n", STORAGE_FILEPATH);
         return -1;
-	}
+    }
 
     printf("------- Unmanned Delivery Storage System START -------\n");
 

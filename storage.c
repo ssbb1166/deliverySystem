@@ -69,12 +69,12 @@ static void initStorage(int x, int y)
  * ------------------------------------------------------------ */
 static int inputPasswd(int x, int y)
 {
-    char input[100];
+    char input[MAX_INPUT_SIZE+1];
 
     printf(" - input password for (%d, %d) storage : ", x, y);
-    gets(input);
-    if (strcmp(input, deliverySystem[x][y].passwd) != 0 &&
-        strcmp(input, masterPassword) != 0) {
+    scanf("%s", input);
+    if (strcmp(input, deliverySystem[x][y].passwd) &&
+        strcmp(input, masterPassword)) {
         printf(" -----------> password is wrong!!\n");
         return -1;
     }
@@ -86,37 +86,6 @@ static int inputPasswd(int x, int y)
 /* API function for main.c file =============================== */
 
 /* ------------------------------------------------------------
- * backup the delivery system context to the file system
- * char* filepath: filepath and name to write
- * return: 0 - backup was successfully done, -1 - failed to backup
- * ------------------------------------------------------------ */
-int str_backupSystem(char* filepath)
-{
-    int i, j;
-    FILE *fp;
-
-    fp = fopen(filepath, "w");
-    if (fp == NULL)
-        return -1;
-
-    fprintf(fp, "%d %d\n", systemSize[0], systemSize[1]);
-    fprintf(fp, "%s\n", masterPassword);
-
-    for (i = 0; i < systemSize[0]; i++)
-        for (j = 0; j < systemSize[1]; j++)
-            if (deliverySystem[i][j].cnt > 0)
-                fprintf(fp, "%d %d %d %d %s %s\n", i, j,
-                    deliverySystem[i][j].building,
-                    deliverySystem[i][j].room,
-                    deliverySystem[i][j].passwd,
-                    deliverySystem[i][j].context);
-
-    fclose(fp);
-
-    return 0;
-}
-
-/* ------------------------------------------------------------
  * create delivery system on the double pointer deliverySystem
  * char* filepath: filepath and name to read config parameters
  * (row, column, master password, past contexts of the delivery system)
@@ -124,7 +93,7 @@ int str_backupSystem(char* filepath)
  * ------------------------------------------------------------ */
 int str_createSystem(char* filepath)
 {
-    int i, j;
+    int row, col;
     int x, y, nBuilding, nRoom;
     char passwd[PASSWD_LEN+1], msg[MAX_MSG_SIZE+1];
     FILE *fp;
@@ -137,12 +106,12 @@ int str_createSystem(char* filepath)
     fscanf(fp, "%s", masterPassword);
 
     deliverySystem = malloc(sizeof(storage_t *) * systemSize[0]);
-    for (i = 0; i < systemSize[0]; i++)
-        deliverySystem[i] = malloc(sizeof(storage_t) * systemSize[1]);
+    for (row = 0; row < systemSize[0]; row++)
+        deliverySystem[row] = malloc(sizeof(storage_t) * systemSize[1]);
 
-    for (i = 0; i < systemSize[0]; i++)
-        for (j = 0; j < systemSize[1]; j++)
-            initStorage(i, j);
+    for (row = 0; row < systemSize[0]; row++)
+        for (col = 0; col < systemSize[1]; col++)
+            initStorage(row, col);
 
     while (1) {
         if (fgetc(fp) == EOF) break;
@@ -169,19 +138,19 @@ void str_freeSystem(void)
  * ------------------------------------------------------------ */
 void str_printStorageStatus(void)
 {
-    int i, j;
+    int row, col;
     printf("----------------------------- Delivery Storage System Status (%i occupied out of %i )-----------------------------\n\n", storedCnt, systemSize[0]*systemSize[1]);
 
     printf("\t");
-    for (j=0;j<systemSize[1];j++)
-        printf(" %i\t\t",j);
+    for (col = 0; col < systemSize[1]; col++)
+        printf(" %i\t\t", col);
     printf("\n-----------------------------------------------------------------------------------------------------------------\n");
 
-    for (i=0;i<systemSize[0];i++) {
-        printf("%i|\t",i);
-        for (j=0;j<systemSize[1];j++)
-            if (deliverySystem[i][j].cnt > 0)
-                printf("%i,%i\t|\t", deliverySystem[i][j].building, deliverySystem[i][j].room);
+    for (row = 0; row < systemSize[0]; row++) {
+        printf("%i|\t", row);
+        for (col = 0; col < systemSize[1]; col++)
+            if (deliverySystem[row][col].cnt > 0)
+                printf("%i,%i\t|\t", deliverySystem[row][col].building, deliverySystem[row][col].room);
             else
                 printf(" -  \t|\t");
         printf("\n");
@@ -253,14 +222,46 @@ int str_extractStorage(int x, int y)
  * ------------------------------------------------------------ */
 int str_findStorage(int nBuilding, int nRoom)
 {
-    int i, j, cnt;
-    for (i = 0; i < systemSize[0]; i++)
-        for (j = 0; j < systemSize[1]; j++)
-            if (deliverySystem[i][j].building == nBuilding &&
-                deliverySystem[i][j].room == nRoom) {
-                printf(" -----------> Found a package in (%d, %d)\n", i, j);
+    int row, col, cnt = 0;
+
+    for (row = 0; row < systemSize[0]; row++)
+        for (col = 0; col < systemSize[1]; col++)
+            if (deliverySystem[row][col].building == nBuilding &&
+                deliverySystem[row][col].room == nRoom) {
+                printf(" -----------> Found a package in (%d, %d)\n", row, col);
                 cnt++;
-			}
+            }
 
     return cnt;
+}
+
+/* ------------------------------------------------------------
+ * backup the delivery system context to the file system
+ * char* filepath: filepath and name to write
+ * return: 0 - backup was successfully done, -1 - failed to backup
+ * ------------------------------------------------------------ */
+int str_backupSystem(char* filepath)
+{
+    int row, col;
+    FILE *fp;
+
+    fp = fopen(filepath, "w");
+    if (fp == NULL)
+        return -1;
+
+    fprintf(fp, "%d %d\n", systemSize[0], systemSize[1]);
+    fprintf(fp, "%s\n", masterPassword);
+
+    for (row = 0; row < systemSize[0]; row++)
+        for (col = 0; col < systemSize[1]; col++)
+            if (deliverySystem[row][col].cnt > 0)
+                fprintf(fp, "%d %d %d %d %s %s\n", row, col,
+                    deliverySystem[row][col].building,
+                    deliverySystem[row][col].room,
+                    deliverySystem[row][col].passwd,
+                    deliverySystem[row][col].context);
+
+    fclose(fp);
+
+    return 0;
 }
