@@ -46,6 +46,7 @@ static void printStorageInside(int x, int y)
     printf("------------------------------------------------------------------------\n\n");
 }
 
+
 /* ------------------------------------------------------------
  * initialize the storage
  * set all the member variable as an initial value
@@ -54,13 +55,17 @@ static void printStorageInside(int x, int y)
  * ------------------------------------------------------------ */
 static void initStorage(int x, int y)
 {
+    /* set all the member variable as an initial value */
     deliverySystem[x][y].building = 0;
     deliverySystem[x][y].room = 0;
     deliverySystem[x][y].cnt = 0;
     strcpy(deliverySystem[x][y].passwd, masterPassword);
+
+    /* allocate memory to the context pointer */
     deliverySystem[x][y].context = malloc(sizeof(char) * (MAX_MSG_SIZE+1));
     strcpy(deliverySystem[x][y].context, "\0");
 }
+
 
 /* ------------------------------------------------------------
  * get password input and check if it is correct for the cell (x,y)
@@ -71,8 +76,11 @@ static int inputPasswd(int x, int y)
 {
     char input[MAX_INPUT_SIZE+1];
 
+    /* get password input */
     printf(" - input password for (%d, %d) storage : ", x, y);
     scanf("%s", input);
+
+    /* check if input equals password (or master password) */
     if (strcmp(input, deliverySystem[x][y].passwd) &&
         strcmp(input, masterPassword)) {
         printf(" -----------> password is wrong!!\n");
@@ -98,31 +106,38 @@ int str_createSystem(char* filepath)
     char passwd[PASSWD_LEN+1], msg[MAX_MSG_SIZE+1];
     FILE *fp;
 
+    /* open the file */
     fp = fopen(filepath, "r");
     if (fp == NULL)
         return -1;
 
+    /* read row, column, and master password */
     fscanf(fp, "%d %d", &systemSize[0], &systemSize[1]);
     fscanf(fp, "%s", masterPassword);
 
+    /* allocate memory to the double pointer deliverySystem */
     deliverySystem = malloc(sizeof(storage_t *) * systemSize[0]);
     for (row = 0; row < systemSize[0]; row++)
         deliverySystem[row] = malloc(sizeof(storage_t) * systemSize[1]);
 
+    /* initialize the storage */
     for (row = 0; row < systemSize[0]; row++)
         for (col = 0; col < systemSize[1]; col++)
             initStorage(row, col);
 
+    /* read config parameters and put a package to the cell */
     while (1) {
-        if (fgetc(fp) == EOF) break;
         fscanf(fp, "%d %d %d %d %s %s", &x, &y, &nBuilding, &nRoom, passwd, msg);
+        if (fgetc(fp) == EOF) break;
         str_pushToStorage(x, y, nBuilding, nRoom, msg, passwd);
     }
 
+    /* close the file */
     fclose(fp);
 
     return 0;
 }
+
 
 /* ------------------------------------------------------------
  * free the memory of the deliverySystem
@@ -131,6 +146,7 @@ void str_freeSystem(void)
 {
     free(deliverySystem);
 }
+
 
 /* ------------------------------------------------------------
  * print the current state of the whole delivery system
@@ -158,6 +174,7 @@ void str_printStorageStatus(void)
     printf("--------------------------------------- Delivery Storage System Status --------------------------------------------\n\n");
 }
 
+
 /* ------------------------------------------------------------
  * check if the input cell (x,y) is valid and whether it is occupied or not
  * ------------------------------------------------------------ */
@@ -172,6 +189,7 @@ int str_checkStorage(int x, int y)
     return deliverySystem[x][y].cnt;
 }
 
+
 /* ------------------------------------------------------------
  * put a package (msg) to the cell
  * input parameters
@@ -183,18 +201,18 @@ int str_checkStorage(int x, int y)
  * ------------------------------------------------------------ */
 int str_pushToStorage(int x, int y, int nBuilding, int nRoom, char msg[MAX_MSG_SIZE+1], char passwd[PASSWD_LEN+1])
 {
-    if (strlen(passwd) != 4)
-        return -1;
-
+    /* put a package to the cell */
     deliverySystem[x][y].building = nBuilding;
     deliverySystem[x][y].room = nRoom;
     deliverySystem[x][y].cnt = 1;
     strcpy(deliverySystem[x][y].passwd, passwd);
     strcpy(deliverySystem[x][y].context, msg);
+
     storedCnt++;
 
     return 0;
 }
+
 
 /* ------------------------------------------------------------
  * extract the package context with password checking
@@ -204,15 +222,21 @@ int str_pushToStorage(int x, int y, int nBuilding, int nRoom, char msg[MAX_MSG_S
  * ------------------------------------------------------------ */
 int str_extractStorage(int x, int y)
 {
+    /* password checking */
     if (inputPasswd(x, y) != 0)
         return -1;
 
+    /* put the msg string on the screen */
     printStorageInside(x, y);
+
+    /* re-initialize the storage */
     initStorage(x, y);
+
     storedCnt--;
 
     return 0;
 }
+
 
 /* ------------------------------------------------------------
  * find my package from the storage
@@ -224,6 +248,7 @@ int str_findStorage(int nBuilding, int nRoom)
 {
     int row, col, cnt = 0;
 
+    /* print the cells (x,y) */
     for (row = 0; row < systemSize[0]; row++)
         for (col = 0; col < systemSize[1]; col++)
             if (deliverySystem[row][col].building == nBuilding &&
@@ -235,6 +260,7 @@ int str_findStorage(int nBuilding, int nRoom)
     return cnt;
 }
 
+
 /* ------------------------------------------------------------
  * backup the delivery system context to the file system
  * char* filepath: filepath and name to write
@@ -245,13 +271,16 @@ int str_backupSystem(char* filepath)
     int row, col;
     FILE *fp;
 
+    /* open the file */
     fp = fopen(filepath, "w");
     if (fp == NULL)
         return -1;
 
+    /* write row, column, and master password */
     fprintf(fp, "%d %d\n", systemSize[0], systemSize[1]);
     fprintf(fp, "%s\n", masterPassword);
 
+    /* backup the delivery system context */
     for (row = 0; row < systemSize[0]; row++)
         for (col = 0; col < systemSize[1]; col++)
             if (deliverySystem[row][col].cnt > 0)
@@ -261,6 +290,7 @@ int str_backupSystem(char* filepath)
                     deliverySystem[row][col].passwd,
                     deliverySystem[row][col].context);
 
+    /* close the file */
     fclose(fp);
 
     return 0;
