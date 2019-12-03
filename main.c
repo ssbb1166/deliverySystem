@@ -36,6 +36,7 @@ int buildingValidityCheck(int nBuilding, int nRoom)
 }
 
 
+/* main ======================================================= */
 int main(int argc, char *argv[])
 {
     int cmd;

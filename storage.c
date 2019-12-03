@@ -144,6 +144,16 @@ int str_createSystem(char* filepath)
  * ------------------------------------------------------------ */
 void str_freeSystem(void)
 {
+    int row, col;
+
+    /* free the memory of the context */
+    for (row = 0; row < systemSize[0]; row++)
+        for (col = 0; col < systemSize[1]; col++)
+            free(deliverySystem[row][col].context);
+
+    /* free the memory of the deliverySystem */
+    for (row = 0; row < systemSize[0]; row++)
+        free(deliverySystem[row]);
     free(deliverySystem);
 }
 
@@ -201,6 +211,10 @@ int str_checkStorage(int x, int y)
  * ------------------------------------------------------------ */
 int str_pushToStorage(int x, int y, int nBuilding, int nRoom, char msg[MAX_MSG_SIZE+1], char passwd[PASSWD_LEN+1])
 {
+    /* check length of msg and password */
+    if (strlen(msg) > 100 || strlen(passwd) > 4)
+        return -1;
+
     /* put a package to the cell */
     deliverySystem[x][y].building = nBuilding;
     deliverySystem[x][y].room = nRoom;

@@ -2,9 +2,9 @@
 #define MAX_MSG_SIZE            100
 #define PASSWD_LEN              4
 
+/* API function for main.c file =============================== */
 int str_createSystem(char* filepath);
 void str_freeSystem(void);
-
 void str_printStorageStatus(void);
 int str_checkStorage(int x,int y);
 int str_pushToStorage(int x, int y, int nBuilding, int nRoom, char msg[MAX_MSG_SIZE+1], char passwd[PASSWD_LEN+1]);
