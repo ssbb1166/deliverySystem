@@ -62,8 +62,7 @@ static void initStorage(int x, int y)
     strcpy(deliverySystem[x][y].passwd, masterPassword);
 
     /* allocate memory to the context pointer */
-    deliverySystem[x][y].context = malloc(sizeof(char) * (MAX_MSG_SIZE+1));
-    strcpy(deliverySystem[x][y].context, "\0");
+    deliverySystem[x][y].context = NULL;
 }
 
 
@@ -215,11 +214,14 @@ int str_pushToStorage(int x, int y, int nBuilding, int nRoom, char msg[MAX_MSG_S
     if (strlen(msg) > 100 || strlen(passwd) > 4)
         return -1;
 
-    /* put a package to the cell */
+    /* set password for the cell (x,y) */
     deliverySystem[x][y].building = nBuilding;
     deliverySystem[x][y].room = nRoom;
     deliverySystem[x][y].cnt = 1;
     strcpy(deliverySystem[x][y].passwd, passwd);
+
+    /* put a package to the cell */
+    deliverySystem[x][y].context = malloc(sizeof(char) * (strlen(msg)+1));
     strcpy(deliverySystem[x][y].context, msg);
 
     storedCnt++;
